@@ -1,0 +1,70 @@
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/GammaCorrectionCommon.ush"
+
+float4x4 LocalToClip;
+float4 ClipScaleBias;
+float4 HandleColor;
+
+void HandleVS(float3 Position : ATTRIBUTE0, out float4 OutPosition : SV_POSITION)
+{
+    OutPosition = mul(float4(Position, 1), LocalToClip);
+    OutPosition.xy = OutPosition.xy * ClipScaleBias.xy + OutPosition.w * ClipScaleBias.zw;
+}
+
+float4 HandlePS() : SV_Target0
+{
+    return float4(HandleColor.rgb, 1);
+}
+
+Texture2D OverlayTexture;
+Texture2D BackgroundTexture;
+SamplerState OverlaySampler;
+float2 OutputOrigin;
+float2 InverseOutputSize;
+float4x4 ColorToOutputGamut;
+uint OutputFormat;
+uint HardwareSRGB;
+float DisplayGamma;
+float PaperWhiteNits;
+
+float3 DecodeOutput(float3 Color)
+{
+    if (HardwareSRGB != 0) return Color;
+    if (OutputFormat == 0) return sRGBToLinear(Color);
+    if (OutputFormat == 1) return select(Color < 0.081, Color / 4.5, pow(max((Color + 0.099) / 1.099, 0), 1.0 / 0.45));
+    if (OutputFormat == 2) return pow(max(Color, 0), DisplayGamma);
+    if (OutputFormat == 3 || OutputFormat == 4) return ST2084ToLinear(Color);
+    return Color;
+}
+
+float3 EncodeOutput(float3 Color)
+{
+    if (HardwareSRGB != 0) return Color;
+    if (OutputFormat == 0) return LinearToSrgb(Color);
+    if (OutputFormat == 1) return select(Color < 0.018, 4.5 * Color, 1.099 * pow(max(Color, 0), 0.45) - 0.099);
+    if (OutputFormat == 2) return pow(max(Color, 0), 1.0 / DisplayGamma);
+    if (OutputFormat == 3 || OutputFormat == 4) return LinearToST2084(Color);
+    return Color;
+}
+
+float4 CompositeVS(uint VertexId : SV_VertexID) : SV_POSITION
+{
+    float2 UV = float2((VertexId << 1) & 2, VertexId & 2);
+    return float4(UV * float2(2, -2) + float2(-1, 1), 0, 1);
+}
+
+float4 CompositePS(float4 Position : SV_POSITION) : SV_Target0
+{
+    int2 Pixel = int2(Position.xy - OutputOrigin);
+    float4 Background = BackgroundTexture.Load(int3(Pixel, 0));
+    float2 UV = (float2(Pixel) + 0.5) * InverseOutputSize;
+    float4 Overlay = OverlayTexture.SampleLevel(OverlaySampler, UV, 0);
+    if (Overlay.a <= 0) return Background;
+
+    float3 Color = Overlay.rgb / max(Overlay.a, 0.00001);
+    Color = mul(float4(Color, 0), ColorToOutputGamut).rgb;
+    if (OutputFormat == 3 || OutputFormat == 4) Color *= PaperWhiteNits;
+    if (OutputFormat == 5 || OutputFormat == 6) Color *= PaperWhiteNits / 80.0;
+    Color = lerp(DecodeOutput(Background.rgb), Color, saturate(Overlay.a));
+    return float4(EncodeOutput(Color), Overlay.a + Background.a * (1 - Overlay.a));
+}

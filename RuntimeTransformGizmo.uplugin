@@ -1,0 +1,10 @@
+{
+  "FileVersion": 3,
+  "Version": 3,
+  "VersionName": "2.0.1",
+  "FriendlyName": "Runtime Transform Gizmo",
+  "Description": "Camera-aware, mesh-customizable actor gizmo for packaged games.",
+  "Category": "Runtime",
+  "CanContainContent": true,
+  "Modules": [{ "Name": "RuntimeTransformGizmo", "Type": "Runtime", "LoadingPhase": "PostConfigInit" }]
+}
