@@ -3,8 +3,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/SceneComponent.h"
+
 #include "RuntimeGizmoMath.h"
 #include "RuntimeGizmoTypes.h"
+#include "RuntimeGizmoSubsystem.h"
+#include "RuntimeGizmoHandleComponent.h"
+
 #include "RuntimeTransformGizmoActor.generated.h"
 
 class APlayerController;
@@ -25,97 +29,98 @@ public:
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-    UFUNCTION(BlueprintCallable, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintCallable, Category = "Frozen Forest | Runtime Gizmo")
     bool SetTargetComponent(USceneComponent* NewTarget);
 
-    UFUNCTION(BlueprintPure, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintPure, Category = "Frozen Forest | Runtime Gizmo")
     USceneComponent* GetTargetComponent() const { return TargetComponent.Get(); }
 
-    UFUNCTION(BlueprintCallable, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintCallable, Category = "Frozen Forest | Runtime Gizmo")
     void SetPlayerController(APlayerController* NewController);
 
-    UFUNCTION(BlueprintCallable, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintCallable, Category = "Frozen Forest | Runtime Gizmo")
     void SetMode(ERuntimeGizmoMode NewMode);
 
-    UFUNCTION(BlueprintCallable, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintCallable, Category = "Frozen Forest | Runtime Gizmo")
     void SetCoordinateSpace(ERuntimeGizmoSpace NewSpace);
 
-    UFUNCTION(BlueprintCallable, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintCallable, Category = "Frozen Forest | Runtime Gizmo")
     void SetInteractionEnabled(bool bEnabled);
 
-    UFUNCTION(BlueprintPure, Category = "Runtime Gizmo")
-    bool IsDragging() const { return bDragging; }
+    UFUNCTION(BlueprintPure, Category = "Frozen Forest | Runtime Gizmo")
+    bool IsDragging() const;
 
-    UFUNCTION(BlueprintPure, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintPure, Category = "Frozen Forest | Runtime Gizmo")
     ERuntimeGizmoAxis GetHoveredAxis() const;
 
-    UFUNCTION(BlueprintPure, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintPure, Category = "Frozen Forest | Runtime Gizmo")
     URuntimeGizmoHandleComponent* GetHandleComponent(ERuntimeGizmoMode HandleMode, ERuntimeGizmoAxis Axis) const;
 
-    UFUNCTION(BlueprintCallable, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintCallable, Category = "Frozen Forest | Runtime Gizmo")
     bool PointerDown(FVector2D ScreenPosition);
 
-    UFUNCTION(BlueprintCallable, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintCallable, Category = "Frozen Forest | Runtime Gizmo")
     bool BeginAxisDrag(ERuntimeGizmoAxis Axis, FVector2D ScreenPosition);
 
-    UFUNCTION(BlueprintCallable, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintCallable, Category = "Frozen Forest | Runtime Gizmo")
     void PointerMove(FVector2D ScreenPosition);
 
-    UFUNCTION(BlueprintCallable, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintCallable, Category = "Frozen Forest | Runtime Gizmo")
     void PointerUp();
 
-    UFUNCTION(BlueprintCallable, Category = "Runtime Gizmo")
+    UFUNCTION(BlueprintCallable, Category = "Frozen Forest | Runtime Gizmo")
     void CancelDrag();
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Runtime Gizmo")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Frozen Forest | Runtime Gizmo")
     ERuntimeGizmoMode Mode = ERuntimeGizmoMode::Translate;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Runtime Gizmo")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Frozen Forest | Runtime Gizmo")
     ERuntimeGizmoSpace CoordinateSpace = ERuntimeGizmoSpace::World;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Runtime Gizmo|Input")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frozen Forest | Runtime Gizmo|Input")
     bool bAutoHandleMouse = true;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Runtime Gizmo|Input")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Frozen Forest | Runtime Gizmo|Input")
     bool bInteractionEnabled = true;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Runtime Gizmo|Appearance", meta = (ClampMin = "32.0"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frozen Forest | Runtime Gizmo|Appearance", meta = (ClampMin = "32.0"))
     float SizePixels = 120.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Runtime Gizmo|Appearance")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frozen Forest | Runtime Gizmo|Appearance")
     FLinearColor HighlightColor = FLinearColor(1.0f, 0.8f, 0.05f);
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Runtime Gizmo|Appearance")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Frozen Forest | Runtime Gizmo|Appearance")
     TArray<TObjectPtr<URuntimeGizmoHandleComponent>> Handles;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Runtime Gizmo|Snapping", meta = (ClampMin = "0.0"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frozen Forest | Runtime Gizmo|Snapping", meta = (ClampMin = "0.0"))
     double TranslationSnap = 0.0;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Runtime Gizmo|Snapping", meta = (ClampMin = "0.0"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frozen Forest | Runtime Gizmo|Snapping", meta = (ClampMin = "0.0"))
     double RotationSnapDegrees = 0.0;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Runtime Gizmo|Snapping", meta = (ClampMin = "0.0"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frozen Forest | Runtime Gizmo|Snapping", meta = (ClampMin = "0.0"))
     double ScaleSnap = 0.0;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Runtime Gizmo|Scale", meta = (ClampMin = "0.0001"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frozen Forest | Runtime Gizmo|Scale", meta = (ClampMin = "0.0001"))
     double MinimumScale = 0.001;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Runtime Gizmo|Scale", meta = (ClampMin = "16.0"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frozen Forest | Runtime Gizmo|Scale", meta = (ClampMin = "16.0"))
     double ScalePixelsPerDoubling = 120.0;
 
-    UPROPERTY(BlueprintReadOnly, Category = "Runtime Gizmo")
+    UPROPERTY(BlueprintReadOnly, Category = "Frozen Forest | Runtime Gizmo")
     FString LastError;
 
-    UPROPERTY(BlueprintAssignable, Category = "Runtime Gizmo|Events")
+    UPROPERTY(BlueprintAssignable, Category = "Frozen Forest | Runtime Gizmo|Events")
     FRuntimeGizmoBegin OnDragStarted;
 
-    UPROPERTY(BlueprintAssignable, Category = "Runtime Gizmo|Events")
+    UPROPERTY(BlueprintAssignable, Category = "Frozen Forest | Runtime Gizmo|Events")
     FRuntimeGizmoChanged OnTransformChanged;
 
-    UPROPERTY(BlueprintAssignable, Category = "Runtime Gizmo|Events")
+    UPROPERTY(BlueprintAssignable, Category = "Frozen Forest | Runtime Gizmo|Events")
     FRuntimeGizmoEnd OnDragFinished;
 
 private:
+
     UPROPERTY(Transient)
     TWeakObjectPtr<USceneComponent> TargetComponent;
 

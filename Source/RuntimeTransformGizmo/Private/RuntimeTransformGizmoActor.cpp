@@ -398,18 +398,29 @@ bool ARuntimeTransformGizmoActor::StartDrag(URuntimeGizmoHandleComponent* Handle
     DragAxis = DragBasis.RotateVector(AxisVector(Handle->Axis));
     const FVector FromPivot = PickPosition - InitialTransform.GetLocation();
     DragRadial = (FromPivot - DragAxis * FVector::DotProduct(FromPivot, DragAxis)).GetSafeNormal();
+    
     if (DragRadial.IsNearlyZero())
     {
         FVector Unused;
         DragAxis.FindBestAxisVectors(DragRadial, Unused);
     }
+
     PreviousMouse = ScreenPosition;
     AccumulatedDelta = 0.0;
     ActiveHandle = Handle;
     HoveredHandle = Handle;
-    bDragging = true;
+    this->bDragging = true;
     UpdateAppearance();
     OnDragStarted.Broadcast(TargetComponent.Get(), InitialTransform);
+
+    UGameInstance* GI = GetGameInstance();
+    URuntimeGizmoSubsystem* RuntimeGizmoSubsystem = GI ? GI->GetSubsystem<URuntimeGizmoSubsystem>() : nullptr;
+
+	if (RuntimeGizmoSubsystem)
+	{
+		RuntimeGizmoSubsystem->SetDragging(true);
+	}
+
     return true;
 }
 
@@ -514,18 +525,28 @@ void ARuntimeTransformGizmoActor::FinishDrag(bool bCancelled)
     {
         return;
     }
+
     USceneComponent* FinishedTarget = TargetComponent.Get();
     const FTransform Start = InitialTransform;
-    bDragging = false;
-    ActiveHandle = nullptr;
-    HoveredHandle = nullptr;
+    this->bDragging = false;
+    this->ActiveHandle = nullptr;
+    this->HoveredHandle = nullptr;
+
     if (bCancelled && IsValid(FinishedTarget))
     {
         FinishedTarget->SetWorldTransform(Start, false, nullptr, ETeleportType::TeleportPhysics);
     }
+
     const FTransform Final = IsValid(FinishedTarget) ? FinishedTarget->GetComponentTransform() : Start;
     UpdatePlacement();
     OnDragFinished.Broadcast(FinishedTarget, Start, Final, bCancelled);
+
+    UGameInstance* GI = GetGameInstance();
+    URuntimeGizmoSubsystem* RuntimeGizmoSubsystem = GI ? GI->GetSubsystem<URuntimeGizmoSubsystem>() : nullptr;
+    if (RuntimeGizmoSubsystem)
+    {
+        RuntimeGizmoSubsystem->SetDragging(false);
+    }
 }
 
 void ARuntimeTransformGizmoActor::PointerUp()
@@ -541,18 +562,23 @@ void ARuntimeTransformGizmoActor::CancelDrag()
 void ARuntimeTransformGizmoActor::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+
     UpdatePlacement();
+
     if (bDragging && (!TargetComponent.IsValid() || !bViewValid))
     {
         CancelDrag();
     }
+
     if (!bAutoHandleMouse || !Controller.IsValid() || !bInteractionEnabled)
     {
         return;
     }
+
     ULocalPlayer* Player = Controller->GetLocalPlayer();
     FViewport* Viewport = Player && Player->ViewportClient ? Player->ViewportClient->Viewport : nullptr;
     FVector2D Mouse;
+
     if (!Viewport || !Viewport->HasFocus() || !Viewport->IsForegroundWindow() || !Controller->GetMousePosition(Mouse.X, Mouse.Y))
     {
         CancelDrag();
@@ -560,18 +586,27 @@ void ARuntimeTransformGizmoActor::Tick(float DeltaSeconds)
         UpdateAppearance();
         return;
     }
+
     if (Controller->WasInputKeyJustPressed(EKeys::Escape))
     {
         CancelDrag();
         return;
     }
+
     PointerMove(Mouse);
+
     if (Controller->WasInputKeyJustPressed(EKeys::LeftMouseButton))
     {
         PointerDown(Mouse);
     }
+
     if (bDragging && !Controller->IsInputKeyDown(EKeys::LeftMouseButton))
     {
         PointerUp();
     }
+}
+
+bool ARuntimeTransformGizmoActor::IsDragging() const
+{
+	return this->bDragging;
 }
